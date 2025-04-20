@@ -12,7 +12,7 @@
 │   ├── 02_dns_qry_name_long_domains_filter.png
 │   ├── 03_packet_graph.png
 │   └── 04_repeated_dns_requests_sequence.png
-├── pcap/                                  <- (Opcional) Arquivo de tráfego capturado analisado
+├── pcap/                                  <- Arquivo analisado
 │   └── dnscat2_dns_tunneling_24hr.pcap
 └── README.md                               <- Este arquivo
 ```
