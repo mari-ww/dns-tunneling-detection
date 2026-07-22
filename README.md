@@ -1,95 +1,111 @@
-# 🛰️ Detecção de Beaconing via DNS com Wireshark
+# 🛰️ DNS Beaconing Detection with Wireshark
 
-[![Status](https://img.shields.io/badge/status-concluído-brightgreen)]()
-[![Nível](https://img.shields.io/badge/nível-intermediário-orange)]()
-[![Ferramentas](https://img.shields.io/badge/ferramentas-Wireshark-purple)]()
+[![Status](https://img.shields.io/badge/status-completed-brightgreen)]()
+[![Level](https://img.shields.io/badge/level-intermediate-orange)]()
+[![Tools](https://img.shields.io/badge/tools-Wireshark-purple)]()
 
 ## 📦 dns-tunneling-detection/
 
 ```
-├── images/                                 <- Capturas de tela da análise
+├── images/                                 <- Analysis screenshots
 │   ├── 01_dns_qry_name_filter.png
 │   ├── 02_dns_qry_name_long_domains_filter.png
 │   ├── 03_packet_graph.png
 │   └── 04_repeated_dns_requests_sequence.png
-├── pcap/                                  <- Arquivo analisado
+├── pcap/                                  <- Analyzed capture file
 │   └── dnscat2_dns_tunneling_24hr.pcap
-└── README.md                               <- Este arquivo
+└── README.md                               <- This file
 ```
 
-## 🧠 Objetivo
-O objetivo deste projeto é identificar indicadores de comunicação C2 (Command and Control) através do protocolo DNS, como parte de um possível cenário de beaconing malicioso. Detectar esse tipo de atividade é essencial em ambientes SOC (Security Operations Center), já que ataques avançados frequentemente utilizam o DNS para se comunicar de forma furtiva com servidores remotos.
+## 🧠 Objective
+
+The objective of this project is to identify indicators of C2 (Command and Control) communication through the DNS protocol as part of a possible malicious beaconing scenario.
+
+Detecting this type of activity is essential in SOC (Security Operations Center) environments, as advanced threats often abuse DNS to communicate stealthily with remote servers.
 
 ---
 
-## 🔍 Contexto
-Analisamos uma captura de tráfego `.pcap` usando Wireshark, focando em padrões de requisições DNS que podem indicar:
+## 🔍 Context
 
-- Comunicação com domínios gerados automaticamente (DGA).
-- Exfiltração de dados via subdomínios codificados.
-- Atividade de beaconing com intervalos fixos e repetitivos.
+A `.pcap` network capture was analyzed using Wireshark, focusing on DNS request patterns that could indicate:
 
-O objetivo foi identificar se há sinais de malware tentando manter comunicação com um servidor remoto, indicando um possível ataque de DNS Tunneling.
+* Communication with automatically generated domains (DGA).
+* Data exfiltration through encoded subdomains.
+* Beaconing activity with fixed and repetitive intervals.
+
+The goal was to identify signs of malware attempting to maintain communication with a remote server, indicating a possible DNS tunneling attack.
 
 ---
 
-## 📸 Evidências da Análise
+## 📸 Analysis Evidence
 
-### 🖼️ 1. Filtro por Nome de Domínio (`dns.qry.name`)
+### 🖼️ 1. Domain Name Filtering (`dns.qry.name`)
+
 <img src="images/01_dns_qry_name_filter.png" width="700"/>
 
-- A análise foca em requisições DNS para domínios com padrões anômalos: subdomínios longos, aleatórios ou codificados.
-- Pode indicar o uso de domínios DGA ou canais C2 que utilizam DNS.
-- Alguns domínios eram completamente desconhecidos e obscuros, sem associação com serviços legítimos.
+* The analysis focused on DNS requests containing anomalous domain patterns, such as long, random, or encoded subdomains.
+* These patterns may indicate DGA-generated domains or DNS-based C2 channels.
+* Some domains appeared unknown and suspicious, with no clear association with legitimate services.
 
 ---
 
-### 🖼️ 2. Filtro para Domínios Longos
+### 🖼️ 2. Long Domain Filtering
+
 <img src="images/02_dns_qry_name_long_domains_filter.png" width="700"/>
 
-- Destacamos domínios com nomes longos e múltiplos subdomínios codificados.
-- Esse é um forte indício de exfiltração via DNS ou técnicas de tunelamento.
-- Associado à TTP:  
-  `T1071.004 – Application Layer Protocol: DNS`
+* Highlighted domains with long names and multiple encoded subdomains.
+* This behavior can indicate DNS tunneling or possible data exfiltration techniques.
+* Associated MITRE ATT&CK Technique:
+
+`T1071.004 – Application Layer Protocol: DNS`
 
 ---
 
-### 🖼️ 3. Gráfico de Pacotes ao Longo do Tempo
+### 🖼️ 3. Packet Timeline Graph
+
 <img src="images/03_packet_graph.png" width="700"/>
 
-- O gráfico mostra padrões regulares de envio de pacotes DNS.
-- Intervalos temporais consistentes entre os pacotes são comuns em beaconing.
-- A comunicação periódica pode indicar malware aguardando instruções de um servidor C2 remoto.
+* The graph shows regular patterns of DNS packet transmissions.
+* Consistent time intervals between requests are commonly observed in beaconing behavior.
+* Periodic communication may indicate malware waiting for instructions from a remote C2 server.
 
 ---
 
-### 🖼️ 4. Requisições DNS Repetidas em Sequência
+### 🖼️ 4. Repeated DNS Requests Sequence
+
 <img src="images/04_repeated_dns_requests_sequence.png" width="700"/>
 
-- Observamos requisições repetidas para os mesmos domínios suspeitos.
-- Quando o padrão é constante e o domínio é anômalo, isso reforça o comportamento malicioso.
-- Pode representar:
-  - Polling por comandos.
-  - Exfiltração fragmentada de dados.
+* Repeated requests to the same suspicious domains were observed.
+* When consistent patterns are combined with anomalous domains, the behavior becomes more suspicious.
+* This activity may represent:
+
+  * Command polling.
+  * Fragmented data exfiltration.
 
 ---
 
-## ✅ Conclusão
-A análise sugere fortemente a presença de beaconing via DNS, com base nos seguintes pontos:
+## ✅ Conclusion
 
-- Consultas para domínios longos, obscuros e com subdomínios aleatórios.
-- Frequência regular de requisições, característica de beaconing.
-- Requisições DNS repetidas para os mesmos domínios, sem interação humana real.
+The analysis strongly suggests DNS beaconing activity based on the following indicators:
 
-📌 Um analista de SOC deve estar atento a esse padrão, pois ele é frequentemente ignorado por soluções tradicionais de detecção. A resposta pode envolver:
+* Queries to long, suspicious domains with random-looking subdomains.
+* Regular request frequency, a common characteristic of beaconing behavior.
+* Repeated DNS requests without normal user interaction.
 
-- Enriquecimento com Threat Intelligence.
-- Isolamento do host envolvido.
-- Criação de regras de alerta no SIEM com base na frequência de DNS, tamanho de domínio e domínios não resolvidos.
+📌 SOC analysts should monitor this type of behavior, as DNS-based threats can bypass traditional detection methods.
+
+Possible response actions include:
+
+* Threat Intelligence enrichment.
+* Isolation of the affected host.
+* SIEM alert creation based on DNS frequency, domain length, and failed resolutions.
 
 ---
 
-## 🧰 Ferramentas Usadas
-- 🐍 **Wireshark**  
-- 📄 Arquivo PCAP: `dnscat2_dns_tunneling_24hr.pcap` (simulado)  
-- 🔬 Análise Temporal e Filtros (`dns.qry.name`, gráficos de pacotes)
+## 🧰 Tools Used
+
+* 🐍 **Wireshark**
+* 📄 PCAP File: `dnscat2_dns_tunneling_24hr.pcap` (simulated)
+* 🔬 Temporal analysis and filtering (`dns.qry.name`, packet graphs)
+
+---
